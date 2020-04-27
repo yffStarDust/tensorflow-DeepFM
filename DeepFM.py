@@ -60,7 +60,6 @@ class DeepFM(BaseEstimator, TransformerMixin):
 
         self._init_graph()
 
-
     def _init_graph(self):
         self.graph = tf.Graph()
         with self.graph.as_default():
@@ -85,9 +84,9 @@ class DeepFM(BaseEstimator, TransformerMixin):
             self.embeddings = tf.multiply(self.embeddings, feat_value)
 
             # ---------- first order term ----------
-            self.y_first_order = tf.nn.embedding_lookup(self.weights["feature_bias"], self.feat_index) # None * F * 1
+            self.y_first_order = tf.nn.embedding_lookup(self.weights["feature_bias"], self.feat_index)  # None * F * 1
             self.y_first_order = tf.reduce_sum(tf.multiply(self.y_first_order, feat_value), 2)  # None * F
-            self.y_first_order = tf.nn.dropout(self.y_first_order, self.dropout_keep_fm[0]) # None * F
+            self.y_first_order = tf.nn.dropout(self.y_first_order, self.dropout_keep_fm[0])     # None * F
 
             # ---------- second order term ---------------
             # sum_square part
@@ -106,7 +105,7 @@ class DeepFM(BaseEstimator, TransformerMixin):
             self.y_deep = tf.reshape(self.embeddings, shape=[-1, self.field_size * self.embedding_size]) # None * (F*K)
             self.y_deep = tf.nn.dropout(self.y_deep, self.dropout_keep_deep[0])
             for i in range(0, len(self.deep_layers)):
-                self.y_deep = tf.add(tf.matmul(self.y_deep, self.weights["layer_%d" %i]), self.weights["bias_%d"%i]) # None * layer[i] * 1
+                self.y_deep = tf.add(tf.matmul(self.y_deep, self.weights["layer_%d" % i]), self.weights["bias_%d" % i]) # None * layer[i] * 1
                 if self.batch_norm:
                     self.y_deep = self.batch_norm_layer(self.y_deep, train_phase=self.train_phase, scope_bn="bn_%d" %i) # None * layer[i] * 1
                 self.y_deep = self.deep_layers_activation(self.y_deep)
@@ -323,14 +322,11 @@ class DeepFM(BaseEstimator, TransformerMixin):
                     ((not self.greater_is_better) and train_result < best_train_score):
                     break
 
-
     def training_termination(self, valid_result):
         if len(valid_result) > 5:
             if self.greater_is_better:
-                if valid_result[-1] < valid_result[-2] and \
-                    valid_result[-2] < valid_result[-3] and \
-                    valid_result[-3] < valid_result[-4] and \
-                    valid_result[-4] < valid_result[-5]:
+                if valid_result[-1] < valid_result[-2] and valid_result[-2] < valid_result[-3] and \
+                        valid_result[-3] < valid_result[-4] and valid_result[-4] < valid_result[-5]:
                     return True
             else:
                 if valid_result[-1] > valid_result[-2] and \
